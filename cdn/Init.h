@@ -44,11 +44,11 @@ private:
 	int e_count;               //边数量
 	int c_count;               //消费节点数量
 	int ServerCost;            //服务器成本
-	int gEdgeCount;            //边数量自增
 protected:
 	vector<edgev_v> vec_edge;      //所有边信息数组
 	vector<int> headEdge;           //每个节点的第一条边编号
 	int gHead[MAX_NODE_NUM];
+	int gEdgeCount;            //边数量自增
 public:
 	GraphLinkedTable();
 	~GraphLinkedTable(){}

@@ -30,7 +30,7 @@ void GA::getBestServersPos(int initNum){
 	
 	
 	/*****这里可能需要修改，增加收敛就停止*****/
-	for(i =0;i< this->iteration;i++)                          // 开始迭代；
+	/*for(i =0;i< this->iteration;i++)                          // 开始迭代；
 	{
 
 		//printf("\ni = %d\n" ,i);                 // 输出当前迭代次数；
@@ -54,6 +54,7 @@ void GA::getBestServersPos(int initNum){
 		}
 
 	}  // 等待迭代终止；
+*/
 	//对于真正随机数是需要注意取较大的迭代次数
 	for(l =0;l<initNum; l++)
 	{
@@ -70,8 +71,14 @@ void GA::getBestServersPos(int initNum){
 	for(int i = 0; i < k.size(); i++){
 		cout << k[i] << "\t";
 	}
-	cout << " 时，函数得到最小值为： " << Min << endl;
+	cout << " 时，函数得到最小值为： " << y(k) << endl;
 	cout << "\nPress any key to end ! " << endl;
+
+
+	vector<vector<int>> route;
+	vector<vector<int>>& path = route;
+
+	cout << "cumpute cost is " << T.minCostFlow(k, path) << endl;
 }
 
 void *GA::evpop(chrom* popcurrent, int initNum)   // 函数：随机生成初始种群；
@@ -79,18 +86,22 @@ void *GA::evpop(chrom* popcurrent, int initNum)   // 函数：随机生成初始
 	int i ,j;
 	int random ;
 	double sum=0;
-
+	int pro = T.GetVNum() / T.GetCNum();
+	int middle = pro / 2;
+	//cout << "V num is " << T.GetVNum() << "\nc num is " << T.GetCNum() << "\npro is " << pro << "\nmiddle is " << middle << endl;
 	for(j =0;j<initNum; j++)                            // 从种群中的第1个染色体到第initNum个染色体
-	{
+	{	
+		cout << "init num is " << j << endl;
 		for(i =0;i<this->nodeNum; i++)                       // 从染色体的第1个基因位到第nodeNum个基因位
 		{
 			random=rand ();                     // 产生一个随机值
-			random=(random %2);                 // 随机产生0或者1
-			popcurrent[j].bit[i]=random ;       // 随机产生染色体上每一个基因位的值，或；
+			random=(random % pro);                 // 随机产生0或者1，每当
+			//cout << "random is " << random << endl;
+			popcurrent[j].bit[i]= random == middle?1:0;       // 随机产生染色体上每一个基因位的值，或；
 		}  
 
 		popcurrent[j].fit= y(x(popcurrent[j])); 		// 计算染色体的适应度值，*********************这个地方需要替换成最小最大流算法
-		sum = sum + popcurrent[j ].fit;
+		sum = sum + popcurrent[j].fit;
 		//cout << "popcurrent " << j << " \nbit is " << x(popcurrent[j ]) << "\nfit is " << popcurrent[j ].fit << endl;
 		// 输出整条染色体的编码情况
 	}
@@ -105,12 +116,15 @@ void *GA::evpop(chrom* popcurrent, int initNum)   // 函数：随机生成初始
 
 vector<int> GA::x(chrom popcurrent)  // 将编码转换成编号
 {
+	cout << "***************************node number id is *********************************" << endl;
 	vector<int> selectNode;
 	for(int i = 0; i < this->nodeNum; i++){
-		if(popcurrent.bit[i])
+		if(popcurrent.bit[i]){
 			selectNode.push_back(i);
+			cout << i << "\t";
+		}
 	}
-
+	cout << "\n*******************************************************************************" << endl;
 	return selectNode;                           
 }                                     
 //需要能能够从外部直接传输函数，加强鲁棒性
@@ -118,6 +132,9 @@ vector<int> GA::x(chrom popcurrent)  // 将编码转换成编号
 
 int GA::y(vector<int> x)// 函数：求个体的适应度；*****************这个地方可以建一个hash表，优化时间
 {
+	if(x.empty()){
+		return INIT_Min;
+	}
 	int cost = INIT_Min;
 	vector<vector<int>> route;
 	vector<vector<int>>& path = route;
@@ -125,21 +142,18 @@ int GA::y(vector<int> x)// 函数：求个体的适应度；*****************这
 		//如果这个节点之前没有算过，那么重新选择最小最大路径，如果算过，则直接在hash表中找
 		//cout << "server cost is " << T.GetServerCost() << endl;
         	cost = T.minCostFlow(x, path);
-		if(cost == 0){
-			cost = INIT_Min;
-		}
-		else{
+		if(cost != INIT_Min){
 			cost =+ T.GetServerCost() * x.size();
 		}
-
 		
 		hashFit[x] = cost;
 		//hashPath[x] = route;
 		
 	}
 	else  {
-		cost = 	hashFit[x]==0?INIT_Min:hashFit[x];
+		cost = 	hashFit[x];
 	}
+	cout << "\n \n x size is " << x.size() << "   cost is " << cost << endl;
 	return(cost);             
 } 
 

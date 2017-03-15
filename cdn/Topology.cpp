@@ -11,23 +11,41 @@ int Topology::gPath[MAX_NODE_NUM];
 void Topology::_init(vector<int> deploy)
 {
 	_virtualSource = GetVNum();
-	cout<<"Deploy Node:"<<deploy.size()<<endl;
+	_virtualSink = GetVNum() + 1;
 	for (size_t i = 0; i < deploy.size(); i++) {  //增加到超级节点到虚拟节点的链路
-		//insertEdge(_virtualSource, deployNode[i], INT_MAX, 0);
-		//insertEdge(deployNode[i], _virtualSource, 0, 0);
 		InsertEdgev_v(_virtualSource, deploy[i], INT_MAX, 0);
 		InsertEdgev_v(deploy[i], _virtualSource, 0, 0);
 	}
-	_virtualSink = GetVNum() + 1;
-	cout<<"Consume Node:"<<GetCNum()<<endl;
 	for (int i = 0; i < GetCNum(); i++) {  //增加消费节点到虚拟终点的链路
 		int nearId = GetConLinkNode(i);
 		int bandwith = GetConDemand(i);
-		//insertEdge(nearId, _virtualSink, bandwith, 0);
-		//insertEdge(_virtualSink, nearId, 0, 0);
 		InsertEdgev_v(nearId, _virtualSink, bandwith, 0);
 		InsertEdgev_v(_virtualSink, nearId, 0, 0);
 	}
+}
+
+/**
+ * @brief _reset 
+ *
+ * @param {vector<int>} deploy
+ */
+void Topology::_reset(vector<int> deploy)
+{
+	gHead[_virtualSource] = -1;
+	gHead[_virtualSink] = -1;
+	vec_edge.assign(gEdge.begin(), gEdge.end());
+	for (size_t i = 0; i < deploy.size(); i++) {
+		while (gHead[deploy[i]] >= _originEdgeNums) {
+			gHead[deploy[i]] = vec_edge[gHead[deploy[i]]].next;
+		}
+	}
+	for (int i = 0; i < GetCNum(); i++) {  //增加消费节点到虚拟终点的链路
+		int nearId = GetConLinkNode(i);
+		while (gHead[nearId] >= _originEdgeNums) {
+			gHead[nearId] = vec_edge[gHead[nearId]].next;
+		}
+	}
+	gEdgeCount = _originEdgeNums;
 }
 
 /**
@@ -96,9 +114,19 @@ int Topology::_minCostFlow(int s, int t, vector<vector<int>>& path)
 		}
 		reverse(temp.begin(), temp.end());
 		temp.pop_back();
+		temp.push_back(f);
 		path.push_back(temp);
 	}
 	return cost;
+}
+
+/**
+ * @brief init 
+ */
+void Topology::init()
+{
+	gEdge.assign(vec_edge.begin(), vec_edge.end());
+	_originEdgeNums = gEdge.size();
 }
 
 /**
@@ -116,5 +144,8 @@ int Topology::minCostFlow(vector<int> deploy, vector<vector<int>>& path)
 		cout<<"Must init() first"<<endl;
 		return -1;
 	}
-	return _minCostFlow(_virtualSource, _virtualSink, path);
+	int cost = _minCostFlow(_virtualSource, _virtualSink, path);
+	//cout<<"minCost:"<<cost<<endl;
+	_reset(deploy);
+	return cost == 0 ? INT_MAX: cost;
 }
