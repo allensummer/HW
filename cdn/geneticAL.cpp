@@ -116,7 +116,7 @@ void *GA::evpop(chrom* popcurrent, int initNum)   // 函数：随机生成初始
 
 vector<int> GA::x(chrom popcurrent)  // 将编码转换成编号
 {
-	cout << "***************************node number id is *********************************" << endl;
+	
 	vector<int> selectNode;
 	for(int i = 0; i < this->nodeNum; i++){
 		if(popcurrent.bit[i]){
@@ -135,13 +135,20 @@ int GA::y(vector<int> x)// 函数：求个体的适应度；*****************这
 	if(x.empty()){
 		return INIT_Min;
 	}
+	cout << "\n\n***************************node number id is *********************************" << endl;
+	for(int i = 0; i < x.size(); i++){
+		cout << x[i] << "\t";
+	}
+	cout << "\n*******************************************************************************" << endl;
 	int cost = INIT_Min;
 	vector<vector<int>> route;
 	vector<vector<int>>& path = route;
 	if(hashFit.find(x) == hashFit.end()) {	
 		//如果这个节点之前没有算过，那么重新选择最小最大路径，如果算过，则直接在hash表中找
 		//cout << "server cost is " << T.GetServerCost() << endl;
+		cout << "start find min cost flow" << endl;
         	cost = T.minCostFlow(x, path);
+		cout << "end find min cost flow" << endl;
 		if(cost != INIT_Min){
 			cost =+ T.GetServerCost() * x.size();
 		}
