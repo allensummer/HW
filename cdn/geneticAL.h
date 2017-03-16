@@ -38,7 +38,7 @@ class GA{
 	};
 	unordered_map<vector<int>, int, container_hash> hashFit;
 	unordered_map<vector<int>, vector<int>, container_hash> hashPath;
-        void getBestServersPos(int num);
+        vector<vector<int>> getBestServersPos(int num);
     private:
 
         void *evpop(chrom* popcurrent, int num);         //种群初始化
